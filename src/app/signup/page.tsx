@@ -3,11 +3,15 @@
 import { useState } from 'react'
 import { motion } from 'framer-motion'
 import Link from 'next/link'
-import { Music, Mail, Lock, Eye, EyeOff, User, ArrowRight, Check } from 'lucide-react'
+import { useRouter } from 'next/navigation'
+import { Music, Mail, Lock, Eye, EyeOff, User, ArrowRight, Check, AlertCircle } from 'lucide-react'
 
 export default function SignupPage() {
+  const router = useRouter()
   const [showPassword, setShowPassword] = useState(false)
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
+  const [isLoading, setIsLoading] = useState(false)
+  const [error, setError] = useState('')
   const [formData, setFormData] = useState({
     fullName: '',
     email: '',
@@ -17,10 +21,44 @@ export default function SignupPage() {
   })
   const [agreedToTerms, setAgreedToTerms] = useState(false)
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    // TODO: Implement Supabase authentication
-    console.log('Signup:', formData)
+    setIsLoading(true)
+    setError('')
+
+    if (formData.password !== formData.confirmPassword) {
+      setError('Les mots de passe ne correspondent pas')
+      setIsLoading(false)
+      return
+    }
+
+    try {
+      const { supabase } = await import('@/lib/supabase')
+      
+      if (!supabase) {
+        throw new Error('Configuration Supabase manquante')
+      }
+
+      const { data, error } = await supabase.auth.signUp({
+        email: formData.email,
+        password: formData.password,
+        options: {
+          data: {
+            full_name: formData.fullName,
+            role: formData.role,
+          },
+        },
+      })
+
+      if (error) throw error
+
+      router.push('/')
+      router.refresh()
+    } catch (error: any) {
+      setError(error.message || 'Erreur lors de la création du compte')
+    } finally {
+      setIsLoading(false)
+    }
   }
 
   return (
@@ -55,7 +93,14 @@ export default function SignupPage() {
         {/* Signup Form */}
         <div className="glass rounded-2xl p-8 space-y-6">
           <h2 className="text-2xl font-bold text-white mb-6">Créer un compte</h2>
-          
+
+          {error && (
+            <div className="flex items-center space-x-3 p-4 bg-red-500/10 border border-red-500/30 rounded-lg">
+              <AlertCircle className="w-5 h-5 text-red-500 flex-shrink-0" />
+              <p className="text-red-500 text-sm">{error}</p>
+            </div>
+          )}
+
           <form onSubmit={handleSubmit} className="space-y-5">
             {/* Role Selection */}
             <div>
@@ -214,11 +259,20 @@ export default function SignupPage() {
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
               type="submit"
-              disabled={!agreedToTerms}
+              disabled={!agreedToTerms || isLoading}
               className="w-full py-3 gold-gradient-bg text-black font-semibold rounded-lg glow-gold transition-all duration-300 flex items-center justify-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              <span>Créer mon compte</span>
-              <ArrowRight className="w-5 h-5" />
+              {isLoading ? (
+                <>
+                  <div className="w-5 h-5 border-2 border-black border-t-transparent rounded-full animate-spin" />
+                  <span>Création...</span>
+                </>
+              ) : (
+                <>
+                  <span>Créer mon compte</span>
+                  <ArrowRight className="w-5 h-5" />
+                </>
+              )}
             </motion.button>
           </form>
 
