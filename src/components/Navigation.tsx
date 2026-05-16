@@ -36,20 +36,20 @@ export default function Navigation() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
             {/* Logo */}
-            <Link href="/" className="flex items-center space-x-2 group">
+            <Link href="/" className="flex items-center space-x-3 group">
               <motion.div
                 whileHover={{ scale: 1.05 }}
-                className="w-10 h-10 rounded-full gold-gradient-bg flex items-center justify-center glow-gold"
+                className="w-10 h-10 rounded-full gold-gradient-bg flex items-center justify-center glow-gold flex-shrink-0"
               >
                 <Music className="w-6 h-6 text-black" />
               </motion.div>
-              <span className="text-xl font-bold gold-gradient hidden sm:block">
+              <span className="text-xl font-bold gold-gradient hidden sm:block whitespace-nowrap">
                 Bahá'í Sounds Lubumbashi
               </span>
             </Link>
 
             {/* Desktop Navigation Links */}
-            <div className="hidden md:flex items-center space-x-1">
+            <div className="hidden md:flex items-center space-x-2">
               {navItems.slice(0, 5).map((item) => (
                 <Link key={item.name} href={item.href}>
                   <motion.div
