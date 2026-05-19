@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { motion } from 'framer-motion'
+import { useRouter } from 'next/navigation'
 import { 
   User, 
   Settings, 
@@ -12,16 +13,16 @@ import {
   LogOut,
   Camera
 } from 'lucide-react'
+import { useAuth } from '@/contexts/AuthContext'
 
 export default function ProfilePage() {
+  const router = useRouter()
+  const { user, signOut } = useAuth()
   const [activeTab, setActiveTab] = useState('playlists')
 
-  const user = {
-    name: 'John Doe',
-    email: 'john@example.com',
-    avatar: null,
-    role: 'user',
-    joinedAt: 'January 2024'
+  if (!user) {
+    router.push('/login')
+    return null
   }
 
   const playlists = [
@@ -36,6 +37,11 @@ export default function ProfilePage() {
     { id: 'downloads', label: 'Downloads', icon: Download },
     { id: 'settings', label: 'Settings', icon: Settings },
   ]
+
+  const handleSignOut = async () => {
+    await signOut()
+    router.push('/')
+  }
 
   return (
     <div className="min-h-screen py-20 px-4 sm:px-6 lg:px-8">
@@ -66,12 +72,14 @@ export default function ProfilePage() {
 
               {/* User Info */}
               <div className="flex-1 text-center md:text-left">
-                <h1 className="text-3xl font-bold text-white mb-2">{user.name}</h1>
+                <h1 className="text-3xl font-bold text-white mb-2">
+                  {user.user_metadata?.full_name || user.email?.split('@')[0]}
+                </h1>
                 <p className="text-gray-400 mb-4">{user.email}</p>
                 <div className="flex flex-wrap justify-center md:justify-start gap-4 text-sm text-gray-400">
-                  <span>Joined {user.joinedAt}</span>
+                  <span>Membre depuis {new Date(user.created_at || '').toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' })}</span>
                   <span>•</span>
-                  <span className="capitalize">{user.role}</span>
+                  <span className="capitalize">{user.user_metadata?.role || 'user'}</span>
                 </div>
               </div>
 
@@ -88,10 +96,11 @@ export default function ProfilePage() {
                 <motion.button
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
+                  onClick={handleSignOut}
                   className="px-6 py-3 glass text-red-500 font-semibold rounded-lg border border-red-500/30 hover:border-red-500 transition-all duration-300 flex items-center space-x-2"
                 >
                   <LogOut className="w-5 h-5" />
-                  <span>Logout</span>
+                  <span>Déconnexion</span>
                 </motion.button>
               </div>
             </div>

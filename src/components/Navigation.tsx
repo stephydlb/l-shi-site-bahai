@@ -13,11 +13,15 @@ import {
   LogOut,
   Menu,
   X,
-  Mic
+  Mic,
+  ChevronDown
 } from 'lucide-react'
+import { useAuth } from '@/contexts/AuthContext'
 
 export default function Navigation() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
+  const [isUserMenuOpen, setIsUserMenuOpen] = useState(false)
+  const { user, loading, signOut } = useAuth()
 
   const navItems = [
     { name: 'Accueil', href: '/', icon: Home },
@@ -28,6 +32,11 @@ export default function Navigation() {
     { name: 'Profil', href: '/profile', icon: User },
     { name: 'Paramètres', href: '/settings', icon: Settings },
   ]
+
+  const handleSignOut = async () => {
+    await signOut()
+    setIsUserMenuOpen(false)
+  }
 
   return (
     <>
@@ -66,24 +75,81 @@ export default function Navigation() {
 
             {/* User Actions */}
             <div className="hidden md:flex items-center space-x-3">
-              <Link href="/login">
-                <motion.button
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                  className="px-4 py-2 rounded-lg text-gray-300 hover:text-[#d4af37] hover:bg-[rgba(212,175,55,0.1)] transition-all duration-300 text-sm font-medium"
-                >
-                  Connexion
-                </motion.button>
-              </Link>
-              <Link href="/signup">
-                <motion.button
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                  className="px-6 py-2 rounded-lg gold-gradient-bg text-black font-semibold glow-gold transition-all duration-300 text-sm"
-                >
-                  Inscription
-                </motion.button>
-              </Link>
+              {!loading && user ? (
+                /* User Menu when logged in */
+                <div className="relative">
+                  <motion.button
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                    onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
+                    className="flex items-center space-x-2 px-4 py-2 rounded-lg text-gray-300 hover:text-[#d4af37] hover:bg-[rgba(212,175,55,0.1)] transition-all duration-300 text-sm font-medium"
+                  >
+                    <User className="w-4 h-4" />
+                    <span>{user.email?.split('@')[0]}</span>
+                    <ChevronDown className={`w-4 h-4 transition-transform duration-300 ${isUserMenuOpen ? 'rotate-180' : ''}`} />
+                  </motion.button>
+
+                  <AnimatePresence>
+                    {isUserMenuOpen && (
+                      <motion.div
+                        initial={{ opacity: 0, y: -10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -10 }}
+                        className="absolute right-0 mt-2 w-48 glass rounded-lg border border-[rgba(212,175,55,0.2)] py-2 z-50"
+                      >
+                        <Link href="/profile" onClick={() => setIsUserMenuOpen(false)}>
+                          <div className="flex items-center space-x-3 px-4 py-2 text-gray-300 hover:text-[#d4af37] hover:bg-[rgba(212,175,55,0.1)] transition-all duration-300">
+                            <User className="w-4 h-4" />
+                            <span className="text-sm">Mon Profil</span>
+                          </div>
+                        </Link>
+                        <Link href="/favorites" onClick={() => setIsUserMenuOpen(false)}>
+                          <div className="flex items-center space-x-3 px-4 py-2 text-gray-300 hover:text-[#d4af37] hover:bg-[rgba(212,175,55,0.1)] transition-all duration-300">
+                            <Heart className="w-4 h-4" />
+                            <span className="text-sm">Favoris</span>
+                          </div>
+                        </Link>
+                        <Link href="/settings" onClick={() => setIsUserMenuOpen(false)}>
+                          <div className="flex items-center space-x-3 px-4 py-2 text-gray-300 hover:text-[#d4af37] hover:bg-[rgba(212,175,55,0.1)] transition-all duration-300">
+                            <Settings className="w-4 h-4" />
+                            <span className="text-sm">Paramètres</span>
+                          </div>
+                        </Link>
+                        <div className="border-t border-[rgba(212,175,55,0.2)] my-2" />
+                        <button
+                          onClick={handleSignOut}
+                          className="flex items-center space-x-3 px-4 py-2 w-full text-gray-300 hover:text-red-400 hover:bg-[rgba(239,68,68,0.1)] transition-all duration-300"
+                        >
+                          <LogOut className="w-4 h-4" />
+                          <span className="text-sm">Déconnexion</span>
+                        </button>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </div>
+              ) : (
+                /* Login/Signup buttons when not logged in */
+                <>
+                  <Link href="/login">
+                    <motion.button
+                      whileHover={{ scale: 1.05 }}
+                      whileTap={{ scale: 0.95 }}
+                      className="px-4 py-2 rounded-lg text-gray-300 hover:text-[#d4af37] hover:bg-[rgba(212,175,55,0.1)] transition-all duration-300 text-sm font-medium"
+                    >
+                      Connexion
+                    </motion.button>
+                  </Link>
+                  <Link href="/signup">
+                    <motion.button
+                      whileHover={{ scale: 1.05 }}
+                      whileTap={{ scale: 0.95 }}
+                      className="px-6 py-2 rounded-lg gold-gradient-bg text-black font-semibold glow-gold transition-all duration-300 text-sm"
+                    >
+                      Inscription
+                    </motion.button>
+                  </Link>
+                </>
+              )}
             </div>
 
             {/* Mobile Menu Button */}
@@ -120,22 +186,66 @@ export default function Navigation() {
                 </Link>
               ))}
               <div className="pt-4 space-y-2 border-t border-[rgba(212,175,55,0.2)] mt-4">
-                <Link href="/login" onClick={() => setIsMobileMenuOpen(false)}>
-                  <motion.button
-                    whileTap={{ scale: 0.95 }}
-                    className="w-full px-4 py-3 rounded-lg text-gray-300 hover:text-[#d4af37] hover:bg-[rgba(212,175,55,0.1)] transition-all duration-300 font-medium"
-                  >
-                    Connexion
-                  </motion.button>
-                </Link>
-                <Link href="/signup" onClick={() => setIsMobileMenuOpen(false)}>
-                  <motion.button
-                    whileTap={{ scale: 0.95 }}
-                    className="w-full px-4 py-3 rounded-lg gold-gradient-bg text-black font-semibold glow-gold transition-all duration-300"
-                  >
-                    Inscription
-                  </motion.button>
-                </Link>
+                {!loading && user ? (
+                  <>
+                    <Link href="/profile" onClick={() => setIsMobileMenuOpen(false)}>
+                      <motion.div
+                        whileTap={{ scale: 0.95 }}
+                        className="flex items-center space-x-3 px-4 py-3 rounded-lg text-gray-300 hover:text-[#d4af37] hover:bg-[rgba(212,175,55,0.1)] transition-all duration-300"
+                      >
+                        <User className="w-5 h-5" />
+                        <span className="font-medium">Mon Profil</span>
+                      </motion.div>
+                    </Link>
+                    <Link href="/favorites" onClick={() => setIsMobileMenuOpen(false)}>
+                      <motion.div
+                        whileTap={{ scale: 0.95 }}
+                        className="flex items-center space-x-3 px-4 py-3 rounded-lg text-gray-300 hover:text-[#d4af37] hover:bg-[rgba(212,175,55,0.1)] transition-all duration-300"
+                      >
+                        <Heart className="w-5 h-5" />
+                        <span className="font-medium">Favoris</span>
+                      </motion.div>
+                    </Link>
+                    <Link href="/settings" onClick={() => setIsMobileMenuOpen(false)}>
+                      <motion.div
+                        whileTap={{ scale: 0.95 }}
+                        className="flex items-center space-x-3 px-4 py-3 rounded-lg text-gray-300 hover:text-[#d4af37] hover:bg-[rgba(212,175,55,0.1)] transition-all duration-300"
+                      >
+                        <Settings className="w-5 h-5" />
+                        <span className="font-medium">Paramètres</span>
+                      </motion.div>
+                    </Link>
+                    <button
+                      onClick={() => {
+                        handleSignOut()
+                        setIsMobileMenuOpen(false)
+                      }}
+                      className="w-full flex items-center space-x-3 px-4 py-3 rounded-lg text-gray-300 hover:text-red-400 hover:bg-[rgba(239,68,68,0.1)] transition-all duration-300 font-medium"
+                    >
+                      <LogOut className="w-5 h-5" />
+                      <span>Déconnexion</span>
+                    </button>
+                  </>
+                ) : (
+                  <>
+                    <Link href="/login" onClick={() => setIsMobileMenuOpen(false)}>
+                      <motion.button
+                        whileTap={{ scale: 0.95 }}
+                        className="w-full px-4 py-3 rounded-lg text-gray-300 hover:text-[#d4af37] hover:bg-[rgba(212,175,55,0.1)] transition-all duration-300 font-medium"
+                      >
+                        Connexion
+                      </motion.button>
+                    </Link>
+                    <Link href="/signup" onClick={() => setIsMobileMenuOpen(false)}>
+                      <motion.button
+                        whileTap={{ scale: 0.95 }}
+                        className="w-full px-4 py-3 rounded-lg gold-gradient-bg text-black font-semibold glow-gold transition-all duration-300"
+                      >
+                        Inscription
+                      </motion.button>
+                    </Link>
+                  </>
+                )}
               </div>
             </div>
           </motion.div>
